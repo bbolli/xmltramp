@@ -37,8 +37,8 @@ class Element:
 		if prefixes: self._dNS = prefixes.get(None, None)
 		else: self._dNS = None
 	
-	def __repr__(self, recursive=0, multiline=0, inprefixes=None):
-		def qname(name, inprefixes): 
+	def __repr__(self, recursive=0, multiline=0, inner=0, inprefixes=None):
+		def qname(name, inprefixes):
 			if islst(name):
 				if inprefixes[name[0]] is not None:
 					return inprefixes[name[0]]+':'+name[1]
@@ -65,15 +65,18 @@ class Element:
 		inprefixes = inprefixes or {u'http://www.w3.org/XML/1998/namespace':'xml'}
 		
 		# need to call first to set inprefixes:
-		attributes = arep(self._attrs, inprefixes, recursive) 
-		out = '<' + qname(self._name, inprefixes)  + attributes 
+		if not inner:
+			attributes = arep(self._attrs, inprefixes, recursive) 
+			out = '<' + qname(self._name, inprefixes)  + attributes 
 		
 		if not self._dir and (self._name[0] in empty.keys() 
 		  and self._name[1] in empty[self._name[0]]):
+			if inner: return ''
 			out += ' />'
 			return out
 		
-		out += '>'
+		if inner: out = ''
+		else: out += '>'
 
 		if recursive:
 			content = 0
@@ -85,14 +88,14 @@ class Element:
 				if multiline and content: out +=  pad 
 				if isstr(x): out += quote(x)
 				elif isinstance(x, Element):
-					out += x.__repr__(recursive+1, multiline, inprefixes.copy())
+					out += x.__repr__(recursive+1, multiline, 0, inprefixes.copy())
 				else:
 					raise TypeError, "I wasn't expecting "+`x`+"."
 			if multiline and content: out += '\n' + ('\t' * (recursive-1))
 		else:
 			if self._dir: out += '...'
 		
-		out += '</'+qname(self._name, inprefixes)+'>'
+		if not inner: out += '</'+qname(self._name, inprefixes)+'>'
 			
 		return out
 	
@@ -318,6 +321,7 @@ def unittest():
 
 	assert repr(d) == '<doc version="2.7182818284590451">...</doc>'
 	assert d.__repr__(1) == '<doc xmlns:bbc="http://example.org/bbc" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns="http://example.org/bar" version="2.7182818284590451"><author>John Polk and John Palfrey</author><dc:creator>John Polk</dc:creator><dc:creator>John Palfrey</dc:creator><bbc:show bbc:station="4">Buffy</bbc:show></doc>'
+	assert d.__repr__(1,inner=1) == '<author xmlns:bbc="http://example.org/bbc" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns="http://example.org/bar">John Polk and John Palfrey</author><dc:creator xmlns:bbc="http://example.org/bbc" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns="http://example.org/bar">John Polk</dc:creator><dc:creator xmlns:bbc="http://example.org/bbc" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns="http://example.org/bar">John Palfrey</dc:creator><bbc:show xmlns:bbc="http://example.org/bbc" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns="http://example.org/bar" bbc:station="4">Buffy</bbc:show>'
 	assert d.__repr__(1,1) == '<doc xmlns:bbc="http://example.org/bbc" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns="http://example.org/bar" version="2.7182818284590451">\n\t<author>John Polk and John Palfrey</author>\n\t<dc:creator>John Polk</dc:creator>\n\t<dc:creator>John Palfrey</dc:creator>\n\t<bbc:show bbc:station="4">Buffy</bbc:show>\n</doc>'
 
 	assert repr(parse("<doc xml:lang='en' />")) == '<doc xml:lang="en"></doc>'
@@ -342,6 +346,7 @@ def unittest():
 	assert e.__repr__(1) == '<e><c>&lt;img src="foo"></c></e>'
 	e.c = '2 > 4'
 	assert e.__repr__(1) == '<e><c>2 > 4</c></e>'
+	assert e.__repr__(1,inner=1) == '<c>2 > 4</c>'
 	e.c = 'CDATA sections are <em>closed</em> with ]]>.'
 	assert e.__repr__(1) == '<e><c>CDATA sections are &lt;em>closed&lt;/em> with ]]&gt;.</c></e>'
 	e.c = parse('<div xmlns="http://www.w3.org/1999/xhtml">i<br /><span></span>love<br />you</div>')
