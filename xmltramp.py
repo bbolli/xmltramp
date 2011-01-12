@@ -13,7 +13,12 @@ if not hasattr(__builtins__, 'True'): True, False = 1, 0
 def isstr(f): return isinstance(f, type('')) or isinstance(f, type(u''))
 def islst(f): return isinstance(f, type(())) or isinstance(f, type([]))
 
-empty = {'http://www.w3.org/1999/xhtml': ['img', 'br', 'hr', 'meta', 'link', 'base', 'param', 'input', 'col', 'area']}
+empty = {
+	'http://www.w3.org/1999/xhtml': [
+		'img', 'br', 'hr', 'meta', 'link', 'base', 'param', 'input', 'col', 'area'
+	],
+	'http://www.w3.org/2005/Atom': ['link', 'category'],
+}
 
 def quote(x, elt=True):
 	if elt and '<' in x and len(x) > 24 and x.find(']]>') == -1: return "<![CDATA["+x+"]]>"
