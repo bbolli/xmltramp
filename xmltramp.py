@@ -94,7 +94,7 @@ class Element:
 				elif isinstance(x, Element):
 					out += x.__repr__(recursive+1, multiline, 0, inprefixes.copy())
 				else:
-					raise TypeError, "I wasn't expecting "+`x`+"."
+					raise TypeError, "I wasn't expecting '%r'" % x
 			if multiline and content: out += '\n' + ('\t' * (recursive-1))
 		else:
 			if self._dir: out += '...'
@@ -117,7 +117,7 @@ class Element:
 		if self._dNS: n = (self._dNS, n)
 		for x in self._dir:
 			if isinstance(x, Element) and x._name == n: return x
-		raise AttributeError, 'No child element named %s' % repr(n)
+		raise AttributeError, 'No child element named %r' % n
 		
 	def __hasattr__(self, n):
 		for x in self._dir:
