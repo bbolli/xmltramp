@@ -123,7 +123,7 @@ class Element:
 		return ' '.join(text.split())
 		
 	def __str__(self):
-		return self.__unicode__().encode('utf-8')
+		return self.__unicode__().encode('ascii', 'xmlcharrefreplace')
 	
 	def __getattr__(self, n):
 		if n[0] == '_': raise AttributeError, "Use foo['"+n+"'] to access the child element."
