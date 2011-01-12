@@ -70,10 +70,10 @@ class Element:
 		
 		# need to call first to set inprefixes:
 		if not inner:
-			attributes = arep(self._attrs, inprefixes, recursive) 
-			out = '<' + qname(self._name, inprefixes)  + attributes 
+			attributes = arep(self._attrs, inprefixes, recursive)
+			out = '<' + qname(self._name, inprefixes) + attributes
 		
-		if not self._dir and (self._name[0] in empty.keys() 
+		if not self._dir and (self._name[0] in empty.keys()
 		  and self._name[1] in empty[self._name[0]]):
 			if inner: return ''
 			out += ' />'
@@ -84,12 +84,12 @@ class Element:
 
 		if recursive:
 			content = 0
-			for x in self._dir: 
+			for x in self._dir:
 				if isinstance(x, Element): content = 1
 				
 			pad = '\n' + ('\t' * recursive)
 			for x in self._dir:
-				if multiline and content: out +=  pad 
+				if multiline and content: out += pad
 				if isstr(x): out += quote(x)
 				elif isinstance(x, Element):
 					out += x.__repr__(recursive+1, multiline, 0, inprefixes.copy())
@@ -127,7 +127,7 @@ class Element:
  	def __setattr__(self, n, v):
 		if n[0] == '_': self.__dict__[n] = v
 		else: self[n] = v
- 
+
 
 	def __getitem__(self, n):
 		if isinstance(n, type(0)): # d[1] == d._dir[1]
@@ -141,7 +141,7 @@ class Element:
 			if self._dNS and not islst(n): n = (self._dNS, n)
 			out = []
 			for x in self._dir:
-				if isinstance(x, Element) and x._name == n: out.append(x) 
+				if isinstance(x, Element) and x._name == n: out.append(x)
 			return out
 		else: # d['foo'] == first <foo>
 			if self._dNS and not islst(n): n = (self._dNS, n)
@@ -192,7 +192,7 @@ class Element:
 				if self[i]._name == n: del self[i]
 				break
 	
-	def __call__(self, *_pos, **_set): 
+	def __call__(self, *_pos, **_set):
 		if _set:
 			for k in _set.keys(): self._attrs[k] = _set[k]
 		if len(_pos) > 1:
@@ -264,7 +264,7 @@ def parse(text):
 	from StringIO import StringIO
 	return seed(StringIO(text))
 
-def load(url): 
+def load(url):
 	import urllib
 	return seed(urllib.urlopen(url))
 
@@ -280,7 +280,7 @@ def unittest():
 	
 	d = Element('foo', attrs={'foo':'bar'}, children=['hit with a', Element('bar'), Element('bar')])
 	
-	try: 
+	try:
 		d._doesnotexist
 		raise "ExpectedError", "but found success. Damn."
 	except AttributeError: pass
@@ -315,7 +315,7 @@ def unittest():
 	bbc = Namespace("http://example.org/bbc")
 	dc = Namespace("http://purl.org/dc/elements/1.1/")
 	d = parse("""<doc version="2.7182818284590451"
-	  xmlns="http://example.org/bar" 
+	  xmlns="http://example.org/bar"
 	  xmlns:dc="http://purl.org/dc/elements/1.1/"
 	  xmlns:bbc="http://example.org/bbc">
 		<author>John Polk and John Palfrey</author>
@@ -367,5 +367,5 @@ def unittest():
 	
 	assert parse('<x a="&lt;"></x>').__repr__(1) == '<x a="&lt;"></x>'
 	assert parse('<a xmlns="http://a"><b xmlns="http://b"/></a>').__repr__(1) == '<a xmlns="http://a"><b xmlns="http://b"></b></a>'
-	
+
 if __name__ == '__main__': unittest()
