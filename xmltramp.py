@@ -1,3 +1,5 @@
+#!/usr/bin/python
+
 """xmltramp: Make XML documents easily accessible."""
 
 __version__ = "2.18"
