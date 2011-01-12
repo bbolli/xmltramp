@@ -22,7 +22,7 @@ def quote(x, elt=True):
 	return x
 
 class Element:
-	def __init__(self, name, attrs=None, children=None, prefixes=None):
+	def __init__(self, name, attrs=None, children=None, prefixes=None, value=None):
 		if islst(name) and name[0] == None: name = name[1]
 		if attrs:
 			na = {}
@@ -40,6 +40,11 @@ class Element:
 		
 		if prefixes: self._dNS = prefixes.get(None, None)
 		else: self._dNS = None
+
+		if value is not None:
+			if islst(value): self(*value)
+			elif type(value) is type({}): self(**value)
+			elif value: self._dir.append(value)
 	
 	def __repr__(self, recursive=0, multiline=0, inner=0, inprefixes=None):
 		def qname(name, inprefixes):
@@ -148,27 +153,29 @@ class Element:
 			for x in self._dir:
 				if isinstance(x, Element) and x._name == n: return x
 			raise KeyError, n
-	
+
 	def __setitem__(self, n, v):
 		if isinstance(n, type(0)): # d[1]
 			self._dir[n] = v
+		elif n is None:
+			self._dir.append(v)
 		elif isinstance(n, slice(0).__class__):
 			# d['foo':] adds a new foo
 			n = n.start
 			if self._dNS and not islst(n): n = (self._dNS, n)
 
-			nv = Element(n)
+			nv = Element(n, value=v)
 			self._dir.append(nv)
-			
+
 		else: # d["foo"] replaces first <foo> and dels rest
 			if self._dNS and not islst(n): n = (self._dNS, n)
 
-			nv = Element(n); nv._dir.append(v)
+			nv = Element(n, value=v)
 			replaced = False
 
 			todel = []
 			for i in range(len(self)):
-				if self[i]._name == n:
+				if isinstance(self[i], Element) and self[i]._name == n:
 					if replaced:
 						todel.append(i)
 					else:
@@ -205,6 +212,10 @@ class Element:
 			return self._attrs
 
 	def __len__(self): return len(self._dir)
+
+	def _new(self, n, v=None):
+		self[n:] = v
+		return self._dir[-1]
 
 class Namespace:
 	def __init__(self, uri): self.__uri = uri
@@ -308,6 +319,8 @@ def unittest():
 	d['bar':] = 'baz'
 	assert len(d['bar':]) == 3
 	assert d['bar']._name == 'bar'
+	d[-1](sillier='no')
+	assert d[-1].__repr__(1) == '<bar sillier="no">baz</bar>'
 	
 	d = Element('foo')
 	
