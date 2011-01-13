@@ -21,6 +21,9 @@ def quote(x, elt=True):
 	if not elt: x = x.replace('"', '&quot;')
 	return x
 
+def transpose(d):
+	return dict(zip(d.values(), d.keys()))
+
 class Element:
 	def __init__(self, name, attrs=None, children=None, prefixes=None, value=None):
 		if islst(name) and name[0] == None: name = name[1]
@@ -36,7 +39,7 @@ class Element:
 		self._dir = children or []
 		
 		prefixes = prefixes or {}
-		self._prefixes = dict(zip(prefixes.values(), prefixes.keys()))
+		self._prefixes = transpose(prefixes)
 		
 		if prefixes: self._dNS = prefixes.get(None, None)
 		else: self._dNS = None
@@ -164,13 +167,13 @@ class Element:
 			n = n.start
 			if self._dNS and not islst(n): n = (self._dNS, n)
 
-			nv = Element(n, value=v)
+			nv = Element(n, prefixes=transpose(self._prefixes), value=v)
 			self._dir.append(nv)
 
 		else: # d["foo"] replaces first <foo> and dels rest
 			if self._dNS and not islst(n): n = (self._dNS, n)
 
-			nv = Element(n, value=v)
+			nv = Element(n, prefixes=transpose(self._prefixes), value=v)
 			replaced = False
 
 			todel = []
@@ -221,6 +224,7 @@ class Namespace:
 	def __init__(self, uri): self.__uri = uri
 	def __getattr__(self, n): return (self.__uri, n)
 	def __getitem__(self, n): return (self.__uri, n)
+	def _prefix(self, p): return {p: self.__uri}
 
 from xml.sax.handler import EntityResolver, DTDHandler, ContentHandler, ErrorHandler
 
