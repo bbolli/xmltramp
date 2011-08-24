@@ -120,7 +120,7 @@ class Element:
 		text = ''
 		for x in self._dir:
 			text += unicode(x)
-		return ' '.join(text.split())
+		return text
 
 	def __str__(self):
 		return self.__unicode__().encode('ascii', 'xmlcharrefreplace')
@@ -137,7 +137,7 @@ class Element:
 			if isinstance(x, Element) and x._name == n: return True
 		return False
 
- 	def __setattr__(self, n, v):
+	def __setattr__(self, n, v):
 		if n[0] == '_': self.__dict__[n] = v
 		else: self[n] = v
 
