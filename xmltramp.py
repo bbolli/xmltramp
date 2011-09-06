@@ -7,7 +7,7 @@ __author__ = "Aaron Swartz"
 __credits__ = "Many thanks to pjz, bitsko, and DanC."
 __copyright__ = "(C) 2003-2006 Aaron Swartz. GNU GPL 2."
 
-__all__ = ['Element', 'Namespace', 'seed', 'load', 'parse']
+__all__ = ['Element', 'Namespace', 'seed', 'load', 'parse', 'indent']
 
 if not hasattr(__builtins__, 'True'): True, False = 1, 0
 def isstr(f): return isinstance(f, type('')) or isinstance(f, type(u''))
@@ -19,6 +19,8 @@ empty = {
 	],
 	'http://www.w3.org/2005/Atom': ['link', 'category'],
 }
+
+indent = '\t'
 
 def quote(x, elt=True):
 	if elt and '<' in x and len(x) > 24 and x.find(']]>') == -1: return "<![CDATA["+x+"]]>"
@@ -100,7 +102,7 @@ class Element:
 			for x in self._dir:
 				if isinstance(x, Element): content = 1
 
-			pad = '\n' + ('\t' * recursive)
+			pad = '\n' + (indent * recursive)
 			for x in self._dir:
 				if multiline and content: out += pad
 				if isstr(x): out += quote(x)
@@ -108,7 +110,7 @@ class Element:
 					out += x.__repr__(recursive+1, multiline, 0, inprefixes.copy())
 				else:
 					raise TypeError, "I wasn't expecting '%r'" % x
-			if multiline and content: out += '\n' + ('\t' * (recursive-1))
+			if multiline and content: out += '\n' + (indent * (recursive-1))
 		else:
 			if self._dir: out += '...'
 
