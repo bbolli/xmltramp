@@ -298,7 +298,7 @@ def unittest():
 	assert str(parse("<doc>I <b>love</b> you.</doc>")) == "I love you."
 	assert parse("<doc>\nmom\nwow\n</doc>")[0].strip() == "mom\nwow"
 	assert str(parse('<bing>  <bang> <bong>center</bong> </bang>  </bing>')) == "center"
-	assert str(parse('<doc>\xcf\x80</doc>')) == '\xcf\x80'
+	assert unicode(parse('<doc>\xcf\x80</doc>')).encode('utf-8') == '\xcf\x80'
 
 	d = Element('foo', attrs={'foo':'bar'}, children=['hit with a', Element('bar'), Element('bar')])
 
