@@ -119,10 +119,7 @@ class Element:
 		return out
 
 	def __unicode__(self):
-		text = ''
-		for x in self._dir:
-			text += unicode(x)
-		return text
+		return ''.join(unicode(x) for x in self._dir)
 
 	def __str__(self):
 		return self.__unicode__().encode('ascii', 'xmlcharrefreplace')
