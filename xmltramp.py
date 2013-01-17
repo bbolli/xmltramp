@@ -200,6 +200,12 @@ class Element:
 
 			for i in range(len(self)):
 				if self[i]._name == n: del self[i]
+		elif isinstance(n, Element):
+			# delete exactly element n
+			for i in range(len(self)):
+				if self[i] is n:
+					del self[i]
+					break
 		else:
 			# delete first foo
 			if self._dNS and not islst(n): n = (self._dNS, n)
@@ -333,6 +339,9 @@ def unittest():
 	assert d['bar']._name == 'bar'
 	d[-1](sillier='no')
 	assert d[-1].__repr__(1) == '<bar sillier="no">baz</bar>'
+	del d[d[-1]]
+	assert len(d['bar':]) == 2
+	assert d[-1].__repr__(1) == '<bar></bar>'
 
 	d = Element('foo')
 
