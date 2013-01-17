@@ -202,6 +202,7 @@ class Element:
 				if self[i]._name == n: del self[i]
 		else:
 			# delete first foo
+			if self._dNS and not islst(n): n = (self._dNS, n)
 			for i in range(len(self)):
 				if self[i]._name == n: del self[i]
 				break
