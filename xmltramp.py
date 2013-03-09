@@ -141,6 +141,12 @@ class Element:
 		else: self[n] = v
 
 
+	def _getchild(self, n):
+		if self._dNS and not islst(n): n = (self._dNS, n)
+		for x in self._dir:
+			if isinstance(x, Element) and x._name == n: return x
+		return None
+
 	def __getitem__(self, n):
 		if isinstance(n, type(0)): # d[1] == d._dir[1]
 			return self._dir[n]
@@ -156,10 +162,9 @@ class Element:
 				if isinstance(x, Element) and x._name == n: out.append(x)
 			return out
 		else: # d['foo'] == first <foo>
-			if self._dNS and not islst(n): n = (self._dNS, n)
-			for x in self._dir:
-				if isinstance(x, Element) and x._name == n: return x
-			raise KeyError, n
+			child = self._getchild(n)
+			if child is None: raise KeyError, n
+			return child
 
 	def __setitem__(self, n, v):
 		if isinstance(n, type(0)): # d[1]
@@ -229,6 +234,10 @@ class Element:
 			return self._attrs
 
 	def __len__(self): return len(self._dir)
+
+	def __contains__(self, n):
+		# true if self has a child element n
+		return self._getchild(n) is not None
 
 	def _new(self, n, v=None):
 		self[n:] = v
@@ -319,7 +328,9 @@ def unittest():
 		raise "ExpectedError", "but found success. Damn."
 	except AttributeError: pass
 
-	assert hasattr(d, 'bar') == True
+	assert hasattr(d, 'bar')
+	assert 'bar' in d
+	assert 'foo' not in d
 
 	assert d('foo') == 'bar'
 	d(silly='yes')
