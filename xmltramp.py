@@ -141,11 +141,11 @@ class Element:
 		else: self[n] = v
 
 
-	def _getchild(self, n):
+	def _getchild(self, n, default=None):
 		if self._dNS and not islst(n): n = (self._dNS, n)
 		for x in self._dir:
 			if isinstance(x, Element) and x._name == n: return x
-		return None
+		return default
 
 	def __getitem__(self, n):
 		if isinstance(n, type(0)): # d[1] == d._dir[1]
@@ -331,6 +331,8 @@ def unittest():
 	assert hasattr(d, 'bar')
 	assert 'bar' in d
 	assert 'foo' not in d
+	assert d._getchild('baz') is None
+	assert d._getchild('baz', 1) == 1
 
 	assert d('foo') == 'bar'
 	d(silly='yes')
