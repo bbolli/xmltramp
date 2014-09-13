@@ -236,18 +236,18 @@ class Element:
                     break
 
     def __call__(self, *_pos, **_set):
-        if _set:
+        if _set:  # e(a=1, b=2) sets attrs
             for k in _set:
                 self._attrs[k] = _set[k]
-            if not _pos:
+            if not _pos:  # without positional args allows chaining
                 return self
-        if len(_pos) > 1:
+        if len(_pos) > 1:  # e('a', 1, 'b', 2) sets attrs pairwise
             for i in range(0, len(_pos), 2):
                 self._attrs[_pos[i]] = _pos[i + 1]
             return self
-        if len(_pos) == 1:
+        if len(_pos) == 1:  # e('attr') returns the attr value
             return self._attrs[_pos[0]]
-        if len(_pos) == 0:
+        if len(_pos) == 0:  # e() returns the complete attr dict
             return self._attrs
 
     def __len__(self):
@@ -258,6 +258,7 @@ class Element:
         return self._getchild(n) is not None
 
     def _new(self, n, v=None):
+        # appends element n with content v and returns it
         self[n:] = v
         return self._dir[-1]
 
