@@ -25,6 +25,10 @@ def isint(f):
     return isinstance(f, (int, long))
 
 
+def iselement(x, n):
+    return isinstance(x, Element) and x._name == n
+
+
 empty = {
     'http://www.w3.org/1999/xhtml': [
         'img', 'br', 'hr', 'meta', 'link', 'base', 'param', 'input', 'col', 'area'
@@ -148,21 +152,23 @@ class Element:
     def _mkns(self, n):
         return (self._dNS, n) if self._dNS and not islst(n) else n
 
+    def _first(self, n, default=None):
+        n = self._mkns(n)
+        for x in self._dir:
+            if iselement(x, n):
+                return x
+        return default
+
     def __getattr__(self, n):
         if n[0] == '_':
             raise AttributeError("Use foo['" + n + "'] to access the child element")
-        n = self._mkns(n)
-        for x in self._dir:
-            if isinstance(x, Element) and x._name == n:
-                return x
-        raise AttributeError('No child element named %r' % n)
+        child = self._first(n)
+        if child is None:
+            raise AttributeError('No child element named %r' % n)
+        return child
 
     def __hasattr__(self, n):
-        n = self._mkns(n)
-        for x in self._dir:
-            if isinstance(x, Element) and x._name == n:
-                return True
-        return False
+        return bool(self._first(n))
 
     def __setattr__(self, n, v):
         if n[0] == '_':
@@ -171,11 +177,7 @@ class Element:
             self[n] = v
 
     def _getchild(self, n, default=None):
-        n = self._mkns(n)
-        for x in self._dir:
-            if isinstance(x, Element) and x._name == n:
-                return x
-        return default
+        return self._first(n, default)
 
     def __getitem__(self, n):
         if isint(n):  # d[1] == d._dir[1]
@@ -186,7 +188,7 @@ class Element:
                 return self._dir[n.start:n.stop]
             # d['foo':] == all <foo>s
             n = self._mkns(n.start)
-            return [x for x in self._dir if isinstance(x, Element) and x._name == n]
+            return [x for x in self._dir if iselement(x, n)]
         else:  # d['foo'] == first <foo>
             child = self._getchild(n)
             if child is None:
@@ -196,52 +198,41 @@ class Element:
     def __setitem__(self, n, v):
         if isint(n):  # d[1]
             self._dir[n] = v
-        elif n is None:
+        elif n is None:  # d[None] appends v
             self._dir.append(v)
-        elif isinstance(n, slice):
-            # d['foo':] adds a new foo
+        elif isinstance(n, slice):  # d['foo':] adds a new foo
             n = self._mkns(n.start)
             nv = Element(n, prefixes=transpose(self._prefixes), value=v)
             self._dir.append(nv)
         else:  # d["foo"] replaces first <foo> and dels rest
             n = self._mkns(n)
             nv = Element(n, prefixes=transpose(self._prefixes), value=v)
-            replaced = False
-
-            todel = []
-            for i in range(len(self)):
-                if isinstance(self[i], Element) and self[i]._name == n:
-                    if replaced:
-                        todel.append(i)
-                    else:
-                        self[i] = nv
-                        replaced = True
-            if not replaced:
+            idx = [i for (i, x) in enumerate(self._dir) if iselement(x, n)]
+            if idx:
+                self._dir[idx[0]] = nv
+                for x in idx[1:]:
+                    del self._dir[x]
+            else:
                 self._dir.append(nv)
-            for i in todel:
-                del self[i]
 
     def __delitem__(self, n):
         if isint(n):
             del self._dir[n]
-        elif isinstance(n, slice):
-            # delete all <foo>s
+        elif isinstance(n, slice):  # delete all <foo>s
             n = self._mkns(n.start)
             for i in range(len(self)):
                 if self[i]._name == n:
                     del self[i]
-        elif isinstance(n, Element):
-            # delete exactly element n
-            for i in range(len(self)):
-                if self[i] is n:
-                    del self[i]
-                    break
-        else:
-            # delete first foo
+        elif isinstance(n, Element):  # delete exactly element n
+            try:
+                self._dir.remove(n)
+            except ValueError:
+                pass
+        else:  # delete first foo
             n = self._mkns(n)
             for i in range(len(self)):
-                if self[i]._name == n:
-                    del self[i]
+                if self._dir[i]._name == n:
+                    del self._dir[i]
                     break
 
     def __call__(self, *_pos, **_set):
